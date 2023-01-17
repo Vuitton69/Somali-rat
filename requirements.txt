@@ -1,0 +1,5 @@
+discord.py
+PyAutoGUI
+pycryptodome
+pywin32
+requests
